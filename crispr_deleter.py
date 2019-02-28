@@ -5,31 +5,39 @@
 
 from Bio import SeqIO
 
-gb_file = SeqIO.parse(open("bs168genbank.gbff", "r"), "genbank")
-
-counter = 0
+gb = SeqIO.parse(open("bs168genbank.gbff", "r"), "genbank")
 
 #trouble with using qualifiers is that the tags are different for all the entries. Need to have exceptions for when tag
 #is not there, or the error will stop the code at the first entry.
-
+'''
 for record in gb_file:
     print(repr(record.seq))
     for i in range(1,10):
         feature = record.features[i]
         #print(type(feature))
-        #print(feature.qualifiers)
+        print(feature.qualifiers)
         for key in feature.qualifiers['gene']:
             print(key)
-
-
-
 '''
-for gb_record in SeqIO.parse(open(gb_file, "r"), "genbank"):
-    feats = gb_record.features
-    print("Name: {}, Features: {}".format(gb_record.name, len(feats)))
-    for item in feats:
-        print(item.gene)
-        counter += 1
-        if counter > 20:
-            break
-'''
+#find feature.qualifiers['function'] contains 'Biosynthesis' and feature.qualifiers['product'] contains 'antibiotic'
+#or something like that
+
+def finds_tags(genbank_file):
+    gb_file = SeqIO.parse(open(genbank_file, "r"), "genbank")
+    for record in gb_file:
+        print(record.name)
+        all_feats = record.features
+        for feature in all_feats:
+            y = 0
+            for qualifier in feature.qualifiers:
+                if qualifier == 'gene':
+                    y += 1
+                if qualifier == 'product':
+                    y += 1
+                if qualifier == 'function':
+                    y += 1
+            if y == 3:
+                print(feature.qualifiers['product'])
+                #need to find a way to save the specific feature in an easy to access way
+
+finds_tags("bs168genbank.gbff")
