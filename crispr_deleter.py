@@ -8,6 +8,19 @@ from Bio import SeqIO
 gb_file = SeqIO.parse(open("bs168genbank.gbff", "r"), "genbank")
 
 counter = 0
+
+for record in gb_file:
+    print(repr(record.seq))
+    for i in range(10):
+        dct = record.features[i].qualifiers
+        print(type(dct))
+        print(record.features[i].qualifiers)
+        for key, value in dct:
+            print(value)
+
+
+
+'''
 for gb_record in SeqIO.parse(open(gb_file, "r"), "genbank"):
     feats = gb_record.features
     print("Name: {}, Features: {}".format(gb_record.name, len(feats)))
@@ -16,3 +29,4 @@ for gb_record in SeqIO.parse(open(gb_file, "r"), "genbank"):
         counter += 1
         if counter > 20:
             break
+'''
