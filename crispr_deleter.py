@@ -9,14 +9,17 @@ gb_file = SeqIO.parse(open("bs168genbank.gbff", "r"), "genbank")
 
 counter = 0
 
+#trouble with using qualifiers is that the tags are different for all the entries. Need to have exceptions for when tag
+#is not there, or the error will stop the code at the first entry.
+
 for record in gb_file:
     print(repr(record.seq))
-    for i in range(10):
-        dct = record.features[i].qualifiers
-        print(type(dct))
-        print(record.features[i].qualifiers)
-        for key, value in dct:
-            print(value)
+    for i in range(1,10):
+        feature = record.features[i]
+        #print(type(feature))
+        #print(feature.qualifiers)
+        for key in feature.qualifiers['gene']:
+            print(key)
 
 
 
