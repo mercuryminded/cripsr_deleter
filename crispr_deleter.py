@@ -74,5 +74,5 @@ def finds_tags(term_tup):
 finds_tags(collects_terms())
 
 
-def makes_rna(pickles):
-    x = pickle.load(pickles)
+
+
