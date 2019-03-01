@@ -28,15 +28,33 @@ def finds_tags(genbank_file):
                     y += 1
                 if qualifier == 'function':
                     y += 1
+                    #print(feature.qualifiers['function'])
             if y == 3:
-                if 'antibiotic' in feature.qualifiers['product'][0]:
+                '''if ('antibiotic' in feature.qualifiers['product'][0]) and ('Biosynthesis' in\
+                        [s for s in feature.qualifiers['function']]):
                     l = feature.location
                     feature_list.append([feature.qualifiers['product'][0], int(l.start), int(l.end), l.strand])
                     print(feature.qualifiers['product'][0])
                     print(l.start)
                     print(l.end)
-                    print(l.strand)
+                    print(l.strand)'''
+                for entry in feature.qualifiers['function']:
+                    if 'Biosynthesis' in entry:
+                        l = feature.location
+                        feature_list.append([feature.qualifiers['product'][0], int(l.start), int(l.end), l.strand])
+                        print(feature.qualifiers['product'][0])
+                        print(l.start)
+                        print(l.end)
+                        print(l.strand)
     print(feature_list)
                 #need to find a way to save the specific feature in an easy to access way
 
 finds_tags("bs168genbank.gbff")
+
+'''
+if ('Biosynthesis' in entry for entry in feature.qualifiers['function']):
+    feature_list.append(feature.location)
+'''
+'''
+feature_list.append([feature.location for entry in feature.qualifiers['function'] if 'Biosynthesis' in entry])
+'''
