@@ -13,15 +13,33 @@ gb = SeqIO.parse(open("bs168genbank.gbff", "r"), "genbank")
 #find feature.qualifiers['function'] contains 'Biosynthesis' and feature.qualifiers['product'] contains 'antibiotic'
 #or something like that
 
-def finds_tags(genbank_file):
+def collects_terms():
+    search_field_no = 5
+    while search_field_no != 0 and search_field_no != 1:
+        try:
+            search_field_no = int(input('Search in: 0 = function, 1 = product: '))
+        except ValueError:
+            print("Do it right lmao")
+    search_term = input('Property to search for: \nCapitalise for function, for example:\'Biosynthesis\' instead of \'biosynthesis\': ')
+    file_name = input("Input name of genbank file (make sure it's in the working directory): ")
+    x = ['function', 'product']
+    return file_name, search_term, x[search_field_no]
+
+
+def finds_tags(term_tup):
     feature_list=[]
+    genbank_file = term_tup[0]
+    search_term = term_tup[1]
+    search_field = term_tup[2]
     gb_file = SeqIO.parse(open(genbank_file, "r"), "genbank")
+
     for record in gb_file:
         print(record.name)
         all_feats = record.features
         for feature in all_feats:
             y = 0
             for qualifier in feature.qualifiers:
+                #checks that the feature is a gene, has a listed product and listed function
                 if qualifier == 'gene':
                     y += 1
                 if qualifier == 'product':
@@ -38,23 +56,19 @@ def finds_tags(genbank_file):
                     print(l.start)
                     print(l.end)
                     print(l.strand)'''
-                for entry in feature.qualifiers['function']:
-                    if 'Biosynthesis' in entry:
+                for entry in feature.qualifiers[search_field]:
+                    if search_term in entry:
                         l = feature.location
-                        feature_list.append([feature.qualifiers['product'][0], int(l.start), int(l.end), l.strand])
-                        print(feature.qualifiers['product'][0])
+                        feature_list.append([feature.qualifiers[search_field], int(l.start), int(l.end), l.strand])
+                        '''print(feature.qualifiers[search_field])
                         print(l.start)
                         print(l.end)
                         print(l.strand)
+                        print(feature.type)'''
     print(feature_list)
+    #makes a list [name, start, end, strand]
                 #need to find a way to save the specific feature in an easy to access way
 
-finds_tags("bs168genbank.gbff")
+#finds_tags("bs168genbank.gbff", 'Biosynthesis', 'function')
 
-'''
-if ('Biosynthesis' in entry for entry in feature.qualifiers['function']):
-    feature_list.append(feature.location)
-'''
-'''
-feature_list.append([feature.location for entry in feature.qualifiers['function'] if 'Biosynthesis' in entry])
-'''
+finds_tags(collects_terms())
