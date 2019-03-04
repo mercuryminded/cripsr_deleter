@@ -1,4 +1,3 @@
-
 import pickle
 from Bio import SeqIO
 gb_file = SeqIO.parse(open('bs168genbank.gbff', "r"), "genbank")

@@ -14,39 +14,41 @@ gb = SeqIO.parse(open("bs168genbank.gbff", "r"), "genbank")
 # or something like that
 
 # make a thing that shows all of the possible search terms for functions
+
+
 def lists_terms(genbank_file, search_field, search_term, setting):
     """settings: 0 = list, 1 = hunt"""
-    gb_file = SeqIO.parse(open(genbank_file, "r"), "genbank")
+    gb_file = SeqIO.read(open(genbank_file, "r"), "genbank")
     file_name = str(genbank_file[0:4]) + '_' + str(search_term) + '_' + str(search_field)
     file_object = open(file_name, 'wb')
-    for record in gb_file:
-        feature_set = set()
-        feature_locations = []
-        for feature in record.features:
-            y = 0
-            for qualifier in feature.qualifiers:
-                # checks that the feature is a gene, has a listed product and listed function
-                if qualifier == 'gene':
-                    y += 1
-                if qualifier == 'product':
-                    y += 1
-                if qualifier == 'function':
-                    y += 1
-                    # print(feature.qualifiers['function'])
-            if y == 3 and setting == 0:
-                for entry in feature.qualifiers[search_field]:
-                    feature_set.add(entry)
-            if y == 3 and setting == 1:
-                for entry in feature.qualifiers[search_field]:
-                    if search_term in entry:
-                        record.features.extract(record.seq)
-                        feature_locations.append([feature.qualifiers[search_field], int(l.start), int(l.end), l.strand])
+    feature_set = set()
+    feature_locations = []
+    feature_dict = {}
+    for feature in gb_file.features:
+        y = 0
+        for qualifier in feature.qualifiers:
+            # checks that the feature is a gene, has a listed product and listed function
+            if qualifier == 'gene':
+                y += 1
+            elif qualifier == 'product':
+                y += 1
+            elif qualifier == 'function':
+                y += 1
+                # print(feature.qualifiers['function'])
+        if y == 3 and setting == 0:
+            for entry in feature.qualifiers[search_field]:
+                feature_set.add(entry)
+        if y == 3 and setting == 1:
+            for entry in feature.qualifiers[search_field]:
+                if search_term in entry:
+                    feature_dict[feature.qualifiers['product'][0]] = feature.extract(gb_file.seq)
     if setting == 0:
         print("Here is the set of features")
         print(feature_set)
     if setting == 1:
         pickle.dump(feature_locations, file_object)
         file_object.close()
+        print(feature_dict)
 
 
 def collects_terms():
@@ -67,43 +69,6 @@ def collects_terms():
     # possible modification: allow multiple search terms
     lists_terms(file_name, x[search_field_no], search_term, 1)
 
+
+#lists_terms('bs168genbank.gbff', 'function', 'no_term', 0)
 collects_terms()
-
-"""
-def finds_tags(term_tup):
-    feature_list = []
-    genbank_file = term_tup[0]
-    search_term = term_tup[1]
-    search_field = term_tup[2]
-    gb_file = SeqIO.parse(open(genbank_file, "r"), "genbank")
-
-    file_name = str(genbank_file[0:4]) + '_' + str(search_term) + '_' + str(search_field)
-    file_object = open(file_name, 'wb')
-
-    for record in gb_file:
-        print(record.name)
-        for feature in record.features:
-            y = 0
-            for qualifier in feature.qualifiers:
-                # checks that the feature is a gene, has a listed product and listed function
-                if qualifier == 'gene':
-                    y += 1
-                if qualifier == 'product':
-                    y += 1
-                if qualifier == 'function':
-                    y += 1
-                    # print(feature.qualifiers['function'])
-            if y == 3:
-                for entry in feature.qualifiers[search_field]:
-                    if search_term in entry:
-                        l = feature.location
-                        feature_list.append([feature.qualifiers[search_field], int(l.start), int(l.end), l.strand])
-    pickle.dump(feature_list, file_object)
-    file_object.close()
-    # makes a list [name, start, end, strand]
-    # need to find a way to save the specific feature in an easy to access way
-
-# finds_tags("bs168genbank.gbff", 'Biosynthesis', 'function')
-
-finds_tags(collects_terms())
-"""
