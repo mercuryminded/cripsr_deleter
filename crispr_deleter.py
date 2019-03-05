@@ -5,6 +5,7 @@
 
 from Bio import SeqIO
 import pickle
+import os
 
 gb = SeqIO.parse(open("bs168genbank.gbff", "r"), "genbank")
 
@@ -17,13 +18,15 @@ gb = SeqIO.parse(open("bs168genbank.gbff", "r"), "genbank")
 
 
 def lists_terms(genbank_file, search_field, search_term, setting):
-    """settings: 0 = list, 1 = hunt"""
+    """settings: 0 = list, 1 = search"""
     gb_file = SeqIO.read(open(genbank_file, "r"), "genbank")
-    file_name = str(genbank_file[0:4]) + '_' + str(search_term) + '_' + str(search_field)
-    file_object = open(file_name, 'wb')
+    pickle_name = str(genbank_file[0:3]) + '_pickle'
     feature_set = set()
-    feature_locations = []
     feature_dict = {}
+    if setting == 0 and os.path.isfile(pickle_name) and search_field == 'function':
+        unpick = pickle.load(open(pickle_name, 'rb'))
+        print("Here is the set of features")
+        print(*unpick, sep="\n")
     for feature in gb_file.features:
         y = 0
         for qualifier in feature.qualifiers:
@@ -35,19 +38,22 @@ def lists_terms(genbank_file, search_field, search_term, setting):
             elif qualifier == 'function':
                 y += 1
                 # print(feature.qualifiers['function'])
-        if y == 3 and setting == 0:
-            for entry in feature.qualifiers[search_field]:
-                feature_set.add(entry)
+        if setting == 0 and not os.path.isfile(pickle_name):
+            if y == 3 and setting == 0: # a feature must have above 3 properties to be searched
+                for entry in feature.qualifiers[search_field]:
+                    feature_set.add(entry)
         if y == 3 and setting == 1:
             for entry in feature.qualifiers[search_field]:
                 if search_term in entry:
                     feature_dict[feature.qualifiers['product'][0]] = feature.extract(gb_file.seq)
-    if setting == 0:
+    if setting == 0 and not os.path.isfile(pickle_name):
         print("Here is the set of features")
-        print(feature_set)
+        print(feature_set, sep="\n")
+        file_object = open(pickle_name, 'wb')
+        pickle.dump(feature_set, file_object)
     if setting == 1:
-        pickle.dump(feature_locations, file_object)
-        file_object.close()
+        f = open(genbank_file[0:3] + '_' + search_field + search_term, "w+")
+        f.write(feature_dict)
         print(feature_dict)
 
 
