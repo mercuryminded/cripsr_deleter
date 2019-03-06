@@ -100,12 +100,15 @@ def makes_rna(dict_feats):
     for name, sequence in dict_feats.items():
         position_list = []
         for x in range(len(sequence)):
-            if sequence[x:x+2] == 'GG':
+            if sequence[x+1:x+3] == 'GG':
                 position_list.append(x)
+            if sequence.complement()[x+1:x+3] == 'GG':
+                position_list.append(x*(-1))
             position_dict[name] = position_list
     for name, position in position_dict.items():
         if len(position) > 0:
             print(name + '\n' + str(position))
         else:
             print(name + '\nThere is no available PAM site')
+
 startup_sequence()
