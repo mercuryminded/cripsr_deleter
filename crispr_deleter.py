@@ -4,6 +4,7 @@
 '''genbank and fasta file downloaded from here https://www.ncbi.nlm.nih.gov/genome/665?genome_assembly_id=300274'''
 
 from Bio import SeqIO
+from Bio import Seq
 import pickle
 import os
 
@@ -101,7 +102,8 @@ def startup_sequence():
 
 
 def finds_pam_sites(dict_feats):
-    """docstring"""
+    """Finds target cut sites (PAM sequences) for SpCas9. Checks on both strands and
+    outputs a negative number for the non-coding strand."""
     position_dict = {}
     for name, sequence in dict_feats.items():
         position_list = []
@@ -120,30 +122,58 @@ def finds_pam_sites(dict_feats):
 
 def makes_rna(dict_positions, dict_feats):
     """docstring"""
+    promoter_setting = int(input('0: Bacillus subtilis promoter, 1: Escherichia coli promoter, 2: Mammalian promoter, 3: No promoter'))
     rna_dict = {}
+    unavailable_dict = {}
     scaffold = 'GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTTT'
+    promoter_dict = {
+        0: 'AAA',
+        1: 'CCC',
+        2: 'GGG',
+        3: 'TTT'
+    }
     for name, position in dict_positions.items():
         if type(position) == str:
             print('Removing ' + name + ' from dictionary')
+            unavailable_dict[name] = dict_feats[name]
             del dict_positions[name]
     for name, position in dict_positions.items():
         seq = dict_feats[name]
         while name not in rna_dict.keys():
             for entry in position:
                 if 20 <= entry <= 35:
-                    rna_dict[name] = seq[entry-20:entry] + scaffold
-
+                    rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
+                    print('working')
                     break
                 elif -len(seq)+20 <= entry <= -len(seq)+35:
                     print(rna_dict[name] + ' reverse strand PAM sequence')
-                    rna_dict[name] = seq[entry-20:entry] + scaffold
+                    rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
+                    print('working too')
                     break
                 elif 36 <= entry <= 60:
                     print(name + ': Far sequence')
-                    rna_dict[name] = rna_dict[name] = seq[entry-20:entry] + scaffold
+                    print('working three')
+                    rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
+                    break
+                elif -len(seq)+35 <= entry <= -len(seq)+60:
+                    print(rna_dict[name] + ' far away reverse strand PAM sequence')
+                    rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
+                    print('working four')
+                    break
+                else:
+                    """add a thing that adds to unavailable_dict here"""
+                    pass
     for key, value in rna_dict.items():
         print(key)
-        print(value)
+        print(value.complement())
+        print('\n')
+    print("These sequences are now ready to be cloned into an appropriate DNA vector for use.")
+    if unavailable_dict:
+        for key, value in unavailable_dict.items():
+            print(key)
+            print(value)
+            print('\n')
+        print("These sequences are unavailable for CRISPR knockout")
 
 
 startup_sequence()
