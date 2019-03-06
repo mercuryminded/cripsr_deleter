@@ -86,15 +86,21 @@ def collects_terms():
 def startup_sequence():
     """docstring"""
     setting = int(input("Type 0 for new input, type 1 for opening saved file: "))
+    # both blocks below do the same thing, except
+    # setting 0 calls collects_terms() and gets new sequences
+    # setting 1 retrieves a saved dictionary of sequences
     if setting == 0:
         seq_dict = collects_terms()
-        makes_rna(seq_dict)
+        dict_positions = finds_pam_sites(seq_dict) # calls finds_pam_sites() to make dictionary of name:positions
+        makes_rna(dict_positions, seq_dict) # uses the dictionary of sequences and dictionary of positions
     elif setting == 1:
         x = input("Type in name of pickled file: ")
         seq_dict = pickle.load(open(x, 'rb'))
-        makes_rna(seq_dict)
+        dict_positions = finds_pam_sites(seq_dict)
+        makes_rna(dict_positions, seq_dict)
 
-def makes_rna(dict_feats):
+
+def finds_pam_sites(dict_feats):
     """docstring"""
     position_dict = {}
     for name, sequence in dict_feats.items():
@@ -102,13 +108,42 @@ def makes_rna(dict_feats):
         for x in range(len(sequence)):
             if sequence[x+1:x+3] == 'GG':
                 position_list.append(x)
-            if sequence.complement()[x+1:x+3] == 'GG':
+            if sequence.reverse_complement()[x+1:x+3] == 'GG':
+                # reverse complement find GG. Will output negative number
                 position_list.append(x*(-1))
             position_dict[name] = position_list
     for name, position in position_dict.items():
-        if len(position) > 0:
-            print(name + '\n' + str(position))
-        else:
-            print(name + '\nThere is no available PAM site')
+        if len(position) == 0:
+            position_dict[name] = 'No available PAM site'
+    return position_dict
+
+
+def makes_rna(dict_positions, dict_feats):
+    """docstring"""
+    rna_dict = {}
+    scaffold = 'GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTTT'
+    for name, position in dict_positions.items():
+        if type(position) == str:
+            print('Removing ' + name + ' from dictionary')
+            del dict_positions[name]
+    for name, position in dict_positions.items():
+        seq = dict_feats[name]
+        while name not in rna_dict.keys():
+            for entry in position:
+                if 20 <= entry <= 35:
+                    rna_dict[name] = seq[entry-20:entry] + scaffold
+
+                    break
+                elif -len(seq)+20 <= entry <= -len(seq)+35:
+                    print(rna_dict[name] + ' reverse strand PAM sequence')
+                    rna_dict[name] = seq[entry-20:entry] + scaffold
+                    break
+                elif 36 <= entry <= 60:
+                    print(name + ': Far sequence')
+                    rna_dict[name] = rna_dict[name] = seq[entry-20:entry] + scaffold
+    for key, value in rna_dict.items():
+        print(key)
+        print(value)
+
 
 startup_sequence()

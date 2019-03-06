@@ -3,18 +3,11 @@ from Bio import SeqIO
 gb_file = SeqIO.parse(open('bs168genbank.gbff', "r"), "genbank")
 
 
-def makes_rna(pickles):
-    """unpacks into lists with the """
-    sequence_list = []
-    file_object = open(pickles, 'rb')
-    x = pickle.load(file_object)
-    for record in gb_file:
-        for item in x:
-            print(item)
-            start = item[1]
-            stop = item[2]
+x = 'bs1_Biosynthesis_dict'
 
-    print(sequence_list)
+seq_dict = pickle.load(open(x, 'rb'))
+for key, value in seq_dict.items():
+    print(value)
+    print(value.complement())
+    print(value.complement().transcribe() + 'UUU')
 
-
-makes_rna("bs16_Circulate_function")
