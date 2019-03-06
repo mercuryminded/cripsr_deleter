@@ -4,7 +4,6 @@
 '''genbank and fasta file downloaded from here https://www.ncbi.nlm.nih.gov/genome/665?genome_assembly_id=300274'''
 
 from Bio import SeqIO
-from Bio import Seq
 import pickle
 import os
 
@@ -17,14 +16,69 @@ import os
 # make a thing that shows all of the possible search terms for functions
 
 
+def startup_sequence():
+    """Boots up the script and will either load a saved feature dictionary or makes a new set of sequences.
+
+    Takes no arguments, requires user input:
+        First input is the setting: 0 or 1
+            0: Calls collects_terms() to make a new set of sequences
+            1: Loads a file (ending in _dict, containing a dictionary of {names:coding sequences})
+                Second user input is the file name for setting 1
+        Both settings will call finds_pam_sites() and then makes_rna()
+    """
+    setting = int(input("Type 0 for new input, type 1 for opening saved file: "))
+    # both blocks below do the same thing, except
+    # setting 0 calls collects_terms() and gets new sequences
+    # setting 1 retrieves a saved dictionary of sequences
+    if setting == 0:
+        seq_dict = collects_terms()
+        dict_positions = finds_pam_sites(seq_dict) # calls finds_pam_sites() to make dictionary of name:positions
+        makes_rna(dict_positions, seq_dict) # uses the dictionary of sequences and dictionary of positions
+    elif setting == 1:
+        x = input("Type in name of pickled file: ")
+        if not os.path.isfile('./' + x):
+            raise ValueError
+        seq_dict = pickle.load(open(x, 'rb'))
+        dict_positions = finds_pam_sites(seq_dict)
+        makes_rna(dict_positions, seq_dict)
+
+
+def collects_terms():
+    """Asks user for input regarding file name and search terms
+    Takes no arguments, requires user input:
+        First input is the file name of a genbank file in the current working directory
+        Second input is
+
+    """
+    x = ['function', 'product']
+    file_name = input("Input name of genbank file (make sure it's in the working directory): ")
+    search_field_no = 5
+    while search_field_no != 0 and search_field_no != 1:
+        try:
+            search_field_no = int(input('Type 0 to search by function (list provided), type 1 to search by product name: '))
+        except ValueError:
+            print("Type in 0 or 1 to choose: ")
+    if search_field_no == 0:
+        lists_terms(file_name, x[search_field_no],'no_term', 0)
+        search_term = input('Type in one of the functions listed above: ')
+    elif search_field_no == 1:
+        lists_terms(file_name, x[search_field_no], 'no_term', 0)
+        search_term = input('List of possible products above, type keywords separated by \',\' to search: ')
+    # possible modification: allow multiple search terms
+    if "," in search_term:
+        search_term = [x.strip() for x in search_term.split(',')]
+        # input will now accept multiple search terms and make them into lists
+    return lists_terms(file_name, x[search_field_no], search_term, 1)
+
+
 def lists_terms(genbank_file, search_field, search_term, setting):
     """settings: 0 = list, 1 = search"""
     gb_file = SeqIO.read(open(genbank_file, "r"), "genbank")
-    pickled_set_name = str(genbank_file[0:3]) + '_set_pickle'
-    pickled_dict_name = str(genbank_file[0:3]) + '_' + search_term + '_dict'
+    pickled_set_name = str(genbank_file[0:3]) +'_'+search_field+ '_set_pickle'
+    pickled_dict_name = str(genbank_file[0:3]) + '_' + search_term[0].lower() + str(len(search_term)) + '_dict'
     feature_set = set()
     feature_dict = {}
-    if setting == 0 and os.path.isfile(pickled_set_name) and search_field == 'function':
+    if setting == 0 and os.path.isfile(pickled_set_name):
         unpick_set = pickle.load(open(pickled_set_name, 'rb'))
         print("Here is the set of features")
         print(*unpick_set, sep="\n")
@@ -45,11 +99,16 @@ def lists_terms(genbank_file, search_field, search_term, setting):
                     feature_set.add(entry)
         if y == 3 and setting == 1:
             for entry in feature.qualifiers[search_field]:
-                if search_term in entry:
-                    feature_dict[feature.qualifiers['product'][0]] = feature.extract(gb_file.seq)
+                search_score = 0
+                for x in search_term:
+                    if x.lower() in entry.lower():
+                        search_score += 1
+                        if search_score == len(search_term):
+                            feature_dict[feature.qualifiers['product'][0]] = feature.extract(gb_file.seq)
+                    # this extracts the sequence from the specific feature and adds it as a value with product name as key
     if setting == 0 and not os.path.isfile(pickled_set_name):
         print("Here is the set of features")
-        print(feature_set, sep="\n")
+        print(*feature_set, sep="\n")
         file_object = open(pickled_set_name, 'wb')
         pickle.dump(feature_set, file_object)
         file_object.close()
@@ -61,44 +120,8 @@ def lists_terms(genbank_file, search_field, search_term, setting):
         return feature_dict
 
 
-def collects_terms():
-    """insert docstring here"""
-    x = ['function', 'product']
-    file_name = input("Input name of genbank file (make sure it's in the working directory): ")
-    search_field_no = 5
-    while search_field_no != 0 and search_field_no != 1:
-        try:
-            search_field_no = int(input('Type 0 to search by function (list provided), type 1 to search by product name: '))
-        except ValueError:
-            print("Type in 0 or 1 to choose: ")
-    if search_field_no == 0:
-        lists_terms(file_name, x[search_field_no],'no_term', 0)
-        search_term = input('Type in one of the functions listed above: ')
-    else:
-        search_term = input('Name of gene product to search for: ')
-    # possible modification: allow multiple search terms
-    return lists_terms(file_name, x[search_field_no], search_term, 1)
-
-
 # lists_terms('bs168genbank.gbff', 'function', 'no_term', 0)
 # collects_terms()
-
-
-def startup_sequence():
-    """docstring"""
-    setting = int(input("Type 0 for new input, type 1 for opening saved file: "))
-    # both blocks below do the same thing, except
-    # setting 0 calls collects_terms() and gets new sequences
-    # setting 1 retrieves a saved dictionary of sequences
-    if setting == 0:
-        seq_dict = collects_terms()
-        dict_positions = finds_pam_sites(seq_dict) # calls finds_pam_sites() to make dictionary of name:positions
-        makes_rna(dict_positions, seq_dict) # uses the dictionary of sequences and dictionary of positions
-    elif setting == 1:
-        x = input("Type in name of pickled file: ")
-        seq_dict = pickle.load(open(x, 'rb'))
-        dict_positions = finds_pam_sites(seq_dict)
-        makes_rna(dict_positions, seq_dict)
 
 
 def finds_pam_sites(dict_feats):
@@ -114,15 +137,19 @@ def finds_pam_sites(dict_feats):
                 # reverse complement find GG. Will output negative number
                 position_list.append(x*(-1))
             position_dict[name] = position_list
-    for name, position in position_dict.items():
-        if len(position) == 0:
-            position_dict[name] = 'No available PAM site'
+    for name, pos in position_dict.items():
+        if len(pos) == 0:
+            position_dict[name] = 'No PAM site available'
     return position_dict
 
 
 def makes_rna(dict_positions, dict_feats):
     """docstring"""
-    promoter_setting = int(input('0: Bacillus subtilis promoter, 1: Escherichia coli promoter, 2: Mammalian promoter, 3: No promoter'))
+    while not (0 <= promoter_setting <= 3):
+        try:
+            promoter_setting = int(input('0: Bacillus subtilis promoter, 1: Escherichia coli promoter, 2: Mammalian promoter, 3: No promoter'))
+        except ValueError:
+            print("Type one of the numbers listed to choose: ")
     rna_dict = {}
     unavailable_dict = {}
     scaffold = 'GTTTTAGAGCTAGAAATAGCAAGTTAAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTTT'
@@ -135,34 +162,26 @@ def makes_rna(dict_positions, dict_feats):
     for name, position in dict_positions.items():
         if type(position) == str:
             print('Removing ' + name + ' from dictionary')
-            unavailable_dict[name] = dict_feats[name]
-            del dict_positions[name]
+            unavailable_dict[name] = dict_positions[name] # adds unavailable proteins to a dictionary
+            del dict_positions[name] # removes them from the dictionary
     for name, position in dict_positions.items():
         seq = dict_feats[name]
         while name not in rna_dict.keys():
             for entry in position:
-                if 20 <= entry <= 35:
-                    rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
-                    print('working')
-                    break
-                elif -len(seq)+20 <= entry <= -len(seq)+35:
-                    print(rna_dict[name] + ' reverse strand PAM sequence')
-                    rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
-                    print('working too')
-                    break
-                elif 36 <= entry <= 60:
-                    print(name + ': Far sequence')
-                    print('working three')
+                if 20 <= entry <= 50:
                     rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
                     break
-                elif -len(seq)+35 <= entry <= -len(seq)+60:
-                    print(rna_dict[name] + ' far away reverse strand PAM sequence')
+                elif -len(seq)+20 <= entry <= -len(seq)+50:
                     rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
-                    print('working four')
                     break
-                else:
-                    """add a thing that adds to unavailable_dict here"""
-                    pass
+                elif 51 <= entry <= len(seq)/2:
+                    rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
+                    break
+                elif -len(seq)+51 <= entry <= -len(seq)/2:
+                    rna_dict[name] = (promoter_dict[promoter_setting] + seq[entry-20:entry] + scaffold)
+                    break
+                elif position.index(entry) == len(position)-1 and not rna_dict[name]:
+                    unavailable_dict[name] = 'No PAM site available within first half of CDS'
     for key, value in rna_dict.items():
         print(key)
         print(value.complement())
@@ -173,7 +192,6 @@ def makes_rna(dict_positions, dict_feats):
             print(key)
             print(value)
             print('\n')
-        print("These sequences are unavailable for CRISPR knockout")
 
 
 startup_sequence()
