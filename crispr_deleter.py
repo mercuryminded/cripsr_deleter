@@ -1,6 +1,8 @@
 """
 A script that will find genes in a genome with the specified annotation and then generate CRISPR guide RNA sequences to
-delete those genes
+target those genes for breakage by SpCas9. NHEJ then repairs the double strand break and has a chance of causing
+a frame shift error. The target sites (PAM sites) are picked to be as near to the start of the coding sequence so that the
+frame shift error will cause a significant portion of the coding sequence to be altered.
 """
 
 # genbank and fasta file downloaded from here https://www.ncbi.nlm.nih.gov/genome/665?genome_assembly_id=300274
@@ -12,7 +14,8 @@ import os
 
 
 def startup_sequence():
-    """Boots up the script and will either load a saved feature dictionary or makes a new set of sequences.
+    """
+    Boots up the script and will either load a saved feature dictionary or makes a new set of sequences.
 
     Takes no arguments, requires user input:
         First input is the setting: 0 or 1
@@ -48,7 +51,8 @@ def collects_terms():
         First input is the file name of a genbank file in the current working directory
         Second input is choosing to search in functions of genes (0) or their products (1)
             List of all possible search terms for the chosen field will be printed for reference
-    :return: returns the result of lists_terms() on setting 1, which returns a dictionary of {'Name':Sequence} pairs
+    :return lists_terms(): returns the result of lists_terms() on setting 1, which returns a dictionary of
+                           {'Name':Sequence} pairs
     """
     x = ['function', 'product']
     file_name = ''
@@ -56,7 +60,7 @@ def collects_terms():
         try:
             file_name = input("Input name of genbank file (make sure it's in the working directory): ")
             gb_file = SeqIO.read(open(file_name, "r"), "genbank")
-            print("Genbank file ID is" + gb_file.id)
+            print("Genbank file ID is: " + gb_file.id)
         except FileNotFoundError:
             print("Please make sure the genbank file is in the same directory as the python script, "
                   "and that you have typed in the full name of the file")
@@ -86,20 +90,22 @@ def collects_terms():
 
 def lists_terms(genbank_file, search_field, search_term, setting):
     """
-    Takes four arguments returned by collects_terms(), creates a feature_dict file and then
-    :param genbank_file:
+    Takes four arguments returned by collects_terms(), pickles a set of all functions and products if not already done.
+    Searches the genome for coding sequences annotated with the search terms and adds them into feature_dict.
+    Then pickles a feature_dict file to load from. Finally returns feature_dict for finds_pam_sites() to use.
+    :param genbank_file: String. Name of the genbank file containing a genome to be searched
     :param search_field:
     :param search_term:
     :param setting:
-    :return:
+    :return feature_dict:
     """
     gb_file = SeqIO.read(open(genbank_file, "r"), "genbank")
     pickled_set_name = str(genbank_file[0:3]) + '_' + search_field + '_set_pickle'
     pickled_feature_dict = str(genbank_file[0:3]) + '_' + search_term[0] + '_' + str(len(search_term)) + '_dict'
     feature_set = set()
     feature_dict = {}
-    if setting == 0 and os.path.isfile(pickled_set_name):
-        unpick_set = pickle.load(open(pickled_set_name, 'rb'))
+    if setting == 0 and os.path.isfile(pickled_set_name):  # checks if the file is present
+        unpick_set = pickle.load(open(pickled_set_name, 'rb'))  # unpickles and loads the set
         print(*unpick_set, sep="\n")
         print("Above is the set of features to choose from. Please wait... ")
     for feature in gb_file.features:
@@ -179,7 +185,7 @@ def finds_pam_sites(dict_feats):
 
 def makes_rna(dict_positions, dict_feats):
     """
-    This function generates a fasta file containing DNA sequences encoding the guide RNAs in FASTA format.
+    This function generates a FASTA file containing DNA sequences encoding the guide RNAs in FASTA format.
     If any sequences do not have a suitable site for targeting, the names of the sequences will be printed.
     Takes one user input which is the name of the FASTA file to be saved.
     :param dict_positions: Dictionary containing {'Name':[positions]} pairs
@@ -225,7 +231,5 @@ def makes_rna(dict_positions, dict_feats):
             print(value)
             print('\n')
         print("item(s) listed above do not have suitable PAM sequences for SpCas9 knockout.")
-
-
 
 startup_sequence()
