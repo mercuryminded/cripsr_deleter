@@ -5,8 +5,13 @@ gb_file = SeqIO.parse(open('bs168genbank.gbff', "r"), "genbank")
 
 x = 'bs1_Biosynthesis_dict'
 
-search_term = 'tang'
+y = [1,2,3,4]
 
-search_term = [x.strip() for x in search_term.split(',')]
+print(y[4])
 
-print(search_term)
+position = []
+
+for entry in position:
+    if 0 < entry < 20:
+        position.remove(entry)
+    elif entry:

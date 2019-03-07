@@ -2,14 +2,12 @@ from Bio import SeqIO
 import pickle
 gb = SeqIO.read(open("bs168genbank.gbff", "r"), "genbank")
 
-for item in gb.features:
-    print(item)
-    for x in item.qualifiers:
-        print(type(x))
 
+x = gb.seq
+print(x[:10])
+print(x.complement()[:10])
 
-print(len(gb.features))
-print(type(gb.seq))
+print(x.reverse_complement()[:10])
 
 
 def lists_terms(genbank_file, search_field, search_term, setting):
@@ -49,4 +47,3 @@ def lists_terms(genbank_file, search_field, search_term, setting):
         pickle.dump(feature_locations, file_object)
         file_object.close()
 
-lists_terms('bs168genbank.gbff', 'function', 'no_term', 0)
