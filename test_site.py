@@ -11,7 +11,3 @@ print(y[4])
 
 position = []
 
-for entry in position:
-    if 0 < entry < 20:
-        position.remove(entry)
-    elif entry:
