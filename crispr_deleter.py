@@ -36,7 +36,7 @@ def startup_sequence():
         x = ''
         while not os.path.isfile(x):
             try:
-                x = input("Type in name of pickled file (ends with '_pickle'): ")
+                x = input("Type in name of pickled file (ends with '_dict'): ")
                 seq_dict = pickle.load(open(x, 'rb'))
             except FileNotFoundError:
                 print('Type in the name of a genbank file in the current working directory (including file extension).')
@@ -220,8 +220,9 @@ def makes_rna(dict_positions, dict_feats):
         for key, value in rna_dict.items():
             value_r = SeqRecord(value)
             # converts value into a SeqRecord file to be handled by SeqIO
-            value_r.id = value_r.description = 'CRISPR SpCas9 gRNA targeting ' + key + ' at position ' \
-                                               + str(pam_dict[key]) + ' of the coding sequence'
+            value_r.id = key + ' gRNA'
+            value_r.description = 'CRISPR SpCas9 gRNA targeting ' + key + ' at position ' \
+                                  + str(pam_dict[key]) + ' of the coding sequence'
             SeqIO.write(value_r, output_handle, 'fasta')
         output_handle.close()
     print("These sequences are now ready to be cloned into an appropriate DNA vector with a promoter for use.")

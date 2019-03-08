@@ -8,6 +8,9 @@ This script requires a genbank file containing a genome or library of annotated 
 sequences annotated with matching search terms. The script will output the DNA sequences encoding the guide RNAs in 
 a FASTA file.
 
+A single genbank file is included in the .zip, 'bs168.gbff' which is the genbank file containing the Bacillus subtilis 168 genome, which was downloaded from the ncbi website.
+https://www.ncbi.nlm.nih.gov/genome/665?genome_assembly_id=300274
+
 
 ## Usage
 
@@ -26,7 +29,7 @@ Running the script will show this line below.
 ```bash
 Type 0 for new input, type 1 for opening a saved feature dictionary: 
 ```
-Setting 1 requires that you have already run the script and have a _dict file produced by the script. It is currently not useful because the options downstream such as choosing promoters have not been added yet.
+Setting 1 requires that you have already run the script and have a _dict file produced by the script. It is currently not useful because the options downstream such as choosing promoters have not been added yet, so it will simply make another fasta file with the same gRNA sequences.
 
 Setting 0 will lead to more user input and then perform a search based on the input.
 
