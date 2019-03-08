@@ -67,7 +67,7 @@ def collects_terms():
     search_field_no = 5
     while search_field_no != 0 and search_field_no != 1:
         try:
-            search_field_no = int(input('Type 0 to search by function (list provided), '
+            search_field_no = int(input('Type 0 to search by function, '
                                         'type 1 to search by product name: '))
             search_field = x[search_field_no]
         except ValueError:
