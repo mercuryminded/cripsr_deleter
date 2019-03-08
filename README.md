@@ -46,4 +46,9 @@ Genbank file ID is: NC_000964.3
 Type 0 to search by function, type 1 to search by product name: 
 ```
 
-Choosing option 0 will 
+Choosing option 0 will search the genbank file by their functions, choosing 1 will search by the name of the gene product. 
+Both will provide a list of all possible terms as a reference for the search. 
+
+You will then be prompted to type in search terms. Type in one or more search terms (multiples separated by a comma) and confirm.
+
+The final prompt is the name of the fasta file to be saved. Type in the file name without the file extension and confirm
